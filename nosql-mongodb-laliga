@@ -1,0 +1,63 @@
+use tokio;
+
+// Data insertion
+db.getCollection("Primeira Liga Espanhola").insertMany([
+  { nome: "Real Betis Balompié", ano: 1907, ligas: 1, cores: ["Verde", "Branco"], hino: "Há uma lenda que percorre..." },
+  { nome: "Sevilha FC", ano: 1905, ligas: 1, cores: ["Vermelho", "Branco"], hino: "Dizem as línguas antigas…" },
+  { nome: "Cádiz FC", ano: 1910, ligas: 0, cores: ["Amarelo"], hino: "Disseram-me que o amarelo..." },
+  { nome: "FC Barcelona", ano: 1899, ligas: 26, cores: ["Azul", "Grená"] },
+  { nome: "Real Madrid", ano: 1902, ligas: 33, cores: ["Branco"] },
+  { nome: "Desportivo da Corunha", ano: 1906, hino: "Vamos, e digo Desportivo." },
+  { nome: "Recreativo de Huelva" }
+]);
+
+// Query total records in the collection
+db.getCollection("Primeira Liga Espanhola").find();
+
+// Conditional filter: Teams with at least 1 championship (Greater or equal - $gte)
+db.getCollection("Primeira Liga Espanhola").find({ ligas: { $gte: 1 } });
+
+// Conditional filter: Teams founded before 1900 (Less than - $lt)
+db.getCollection("Primeira Liga Espanhola").find({ ano: { $lt: 1900 } });
+
+// Query in Vectors: Identification of teams that contain the color "White" in the array
+db.getCollection("Primeira Liga Espanhola").find({ cores: "Branco" });
+
+// Dynamic property injection (Hino) into an existing document
+db.getCollection("Primeira Liga Espanhola").updateOne(
+  { nome: "FC Barcelona" },
+  { $set: { hino: "Tot o camp és un clam..." } }
+);
+
+// Initialization of property array (Colors) in a document without the previous field
+db.getCollection("Primeira Liga Espanhola").updateOne(
+  { nome: "Recreativo de Huelva" },
+  { $set: { cores: ["Branca", "Azul"] } }
+);
+
+//  Corrective modification of atomic numerical value
+db.getCollection("Primeira Liga Espanhola").updateOne(
+  { nome: "Sevilha FC" },
+  { $set: { ano: 1890 } }
+);
+
+// Partial search: Find string "legend" in hymn (Case-Insensitive)
+db.getCollection("Primeira Liga Espanhola").find({ hino: /lenda/i });
+
+// Partial search: Find the acronym "FC" in the team name
+db.getCollection("Primeira Liga Espanhola").find({ nome: /FC/i });
+
+// Negative compound filter: Name contains "FC" AND hymn does NOT contain "tongues"
+db.getCollection("Primeira Liga Espanhola").find({
+  nome: /FC/i,
+  hino: { $not: /línguas/i }
+});
+
+// Step Downflow Flow:
+// Step 1: Atomic extraction and insertion into the new target collection
+db.getCollection("Segunda Liga Espanhola").insertOne(
+  db.getCollection("Primeira Liga Espanhola").findOne({ nome: "Recreativo de Huelva" })
+);
+
+// Step 2: Secure record purge in the source collection
+db.getCollection("Primeira Liga Espanhola").deleteOne({ nome: "Recreativo de Huelva" });
